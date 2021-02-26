@@ -1,0 +1,52 @@
+---
+title: "penguin problem"
+author: "Jen Richmond"
+date: "26/02/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# ISOLATING THE PROBLEM
+
+# load packages
+
+```{r}
+library(tidyverse)
+library(palmerpenguins)
+
+```
+
+
+# get data
+
+```{r}
+penguins <- penguins
+
+```
+
+
+# create summary stats using across()
+ 
+```{r}
+
+penguins %>%
+  summarise(across(contains("length"), 
+        list(mean = mean, sd = sd, min = min, max = max), na.rm = TRUE)) 
+```
+
+
+
+# Thomas solution
+```{r}
+
+penguins %>%
+  summarize(
+    across(
+      .cols = contains("length"),
+      .fns = list(mean = mean, sd = sd, min = min), na.rm = TRUE))
+  
+```
+

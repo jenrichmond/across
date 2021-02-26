@@ -1,0 +1,113 @@
+---
+title: "across BLOGPOST"
+author: "Jen Richmond"
+date: "24/02/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+I have been playing with the new across() function in dplyr and working out how to get nicely formatted summary stats tables. 
+
+# load packages
+
+```{r}
+library(tidyverse)
+library(palmerpenguins)
+library(skimr)
+library(gt)
+library(tableone)
+```
+
+# get data
+
+```{r}
+penguins <- penguins
+
+```
+
+# The goal
+
+```{r}
+penguin_bits <- c("bill", "flipper")
+mean <- c(43.92, 200.92)
+sd <- c(5.46, 14.06)
+min <- c(32.1, 172)
+  max <- c(59.6, 231)
+
+df <- data.frame(penguin_bits, mean, sd, min, max)
+
+df %>%
+  gt::gt()
+```
+
+I want to get summary stats for bill and flipper length (mean, sd, min, and max) and have them display in a nice table like this. This manual df construction is a bit silly?  Is there an easy way to get summary stats in this format? 
+
+
+# create summary stats the old way
+```{r}
+penguins %>%
+  summarise(bill_mean = mean(bill_length_mm, na.rm = TRUE),
+            bill_sd = sd(bill_length_mm, na.rm = TRUE),
+             bill_min = min(bill_length_mm, na.rm = TRUE),
+             bill_max = max(bill_length_mm, na.rm = TRUE), 
+             flipper_mean = mean(flipper_length_mm, na.rm = TRUE),
+            flipper_sd = sd(flipper_length_mm, na.rm = TRUE),
+             flipper_min = min(flipper_length_mm, na.rm = TRUE),
+             flipper_max = max(flipper_length_mm, na.rm = TRUE))
+
+```
+The summarise function spits out summary stats in SUPER wide format. 
+
+# create summary stats using across()
+
+The new across() function gets you the same thing in many fewer lines of code, but still, it is VERY wide. 
+```{r}
+
+penguins %>%
+  summarise(across(contains("length"), list(mean = mean, sd = sd, min = min, max = max), na.rm = TRUE)) 
+
+```
+
+# skimr
+
+skim is nice because it is tidyverse compatible (so you can select with contains) but you can also make the output a dataframe so you can mess with it. 
+```{r}
+skimtable <- penguins %>%
+  select(contains("length")) %>%
+  skim()
+
+skimtable
+  
+```
+
+skim gives you more than you need so there is some selecting and renaming to do after the fact. 
+```{r}
+
+names(skimtable)
+
+skimtable_rename <- skimtable %>%
+  select(skim_variable, numeric.mean, numeric.sd, numeric.p0, numeric.p100) %>%
+  rename(penguin_bits = skim_variable, mean = numeric.mean, sd = numeric.sd, min = numeric.p0, max = numeric.p100)
+
+gt::gt(skimtable_rename)
+```
+
+
+# tableone package
+
+The TableOne package gives you mean and SD, I wonder whether there is a way to add other summary stats (like min & max to the TableOne?)
+
+
+```{r}
+
+
+to_summarise <- c("bill_length_mm", "flipper_length_mm")
+
+CreateTableOne(vars = to_summarise, data = penguins)
+```
+
+
+
